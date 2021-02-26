@@ -1,0 +1,168 @@
+
+<head>
+    <title>Line Chart</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js" integrity="sha512-d9xgZrVZpmmQlfonhQUvTR7lMPtO7NkZMkA0ABN3PHCbKA5nqylQ/yWlFAyY6hYgdF1Qh6nYiuADWwKB4C2WSw==" crossorigin="anonymous"></script>
+    <script src="https://www.chartjs.org/samples/latest/utils.js"></script>
+    <style>
+    .chart-container {
+        width: 400px;
+        margin-left: 40px;
+        margin-right: 40px;
+        margin-bottom: 40px;
+        display: inline-block;
+    }
+    canvas{
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+    }
+    </style>
+</head>
+
+
+
+<body>
+    <form id="pid_form"><input type="text" id="pid"></form>
+    <div id="ps_line"></div>
+
+    <div class="container">
+    </div>
+    <br>
+    <br>
+
+    <script>
+        var LIMIT = 500;
+        var CURRENT_PID = '';
+
+        function hash_code(str) { // java String#hashCode
+            var hash = 0;
+            for (var i = 0; i < str.length; i++) {
+               hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return hash > 0 ? hash : -hash;
+        } 
+
+        function color_by_str(str) {
+            var r = hash_code(str + 'red!@') % 255;
+            var g = hash_code(str + 'green!') % 255;
+            var b = hash_code(str + 'blue#') % 255;
+
+            return 'rgb(' + r + ',' + g + ',' + b + ')'
+        }
+
+        function get_config(type) {
+            return {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: type,
+                        backgroundColor: color_by_str(type),
+                        borderColor: color_by_str(type),
+                        data: [],
+                        fill: false,
+                    }]
+                },
+                options: {
+                    events: [],
+                    elements: {
+                        point:{
+                            radius: 0
+                        }
+                    },
+                    responsive: true,
+                    title: {
+                        display: true,
+                        text: type
+                    },
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
+                    },
+                    scales: {
+                        xAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: false,
+                                labelString: 'Second'
+                            }
+                        }],
+                        yAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'MB'
+                            }
+                        }]
+                    }
+                }
+            }
+        }
+
+        function refresh(configs, charts) {
+            fetch('/memory_info?process=' + CURRENT_PID)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('ps_line').innerHTML = data.line;
+                    Object.entries(data.data).forEach(function([type, value]) {
+                        configs[type].data.labels.push(data.t);
+                        configs[type].data.datasets.forEach(function(dataset) {
+                            dataset.data.push(data.data[type]);
+                        });
+
+                        if (configs[type].data.labels.length > LIMIT) {
+                            var cut = configs[type].data.labels.length - LIMIT;
+                            configs[type].data.labels.splice(0, cut);
+                            configs[type].data.datasets.forEach(function(dataset) {
+                                dataset.data.splice(0, cut);
+                            });
+                        }
+
+                        charts[type].update();
+                    }); 
+                });
+            setTimeout(refresh, 200, configs, charts);
+        }
+
+        window.onload = function() {
+            document.getElementById('pid_form').addEventListener("submit", function(e) {
+                e.preventDefault();
+                CURRENT_PID = document.getElementById('pid').value;
+                Object.keys(window.configs).forEach(function(type) {
+                    configs[type].data.labels = [];
+                    configs[type].data.datasets.forEach(function(dataset) {
+                        dataset.data = [];
+                    });
+                });
+            }, false);
+
+            fetch('/memory_info')
+                .then(response => response.json())
+                .then(data => {
+                    var container = document.querySelector('.container');
+
+                    var charts = {};
+                    var configs = {}
+                    window.configs = configs;
+                    Object.keys(data.data).forEach(function(type) {
+                        var div = document.createElement('div');
+                        div.classList.add('chart-container');
+                        var canvas = document.createElement('canvas');
+                        div.appendChild(canvas);
+                        container.appendChild(div);
+                        config = get_config(type);
+
+                        var ctx = canvas.getContext('2d');
+                        var chart = new Chart(ctx, config);
+
+                        charts[type] = chart;
+                        configs[type] = config;
+                    });
+                    setTimeout(refresh, 200, configs, charts);
+                });
+        };
+    </script>
+</body>
