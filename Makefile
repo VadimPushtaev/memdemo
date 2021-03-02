@@ -22,6 +22,9 @@ run-barray:
 run-ct: max.so
 	python ct.py
 
+run-ct-dict: dict.so
+	python ct_dict.py
+
 brk: brk.c
 	gcc -std=c99 brk.c -o brk
 
@@ -34,3 +37,5 @@ ref: ref.c
 max.so: max.c
 	gcc -std=c99 -shared -o max.so -fPIC max.c
 
+dict.so: dict.cpp
+	g++ -std=gnu++11 -fPIC -shared dict.cpp -o dict.so
