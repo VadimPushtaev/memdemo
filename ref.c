@@ -24,10 +24,6 @@ int main() {
     getchar();
     memcpy(a, b, GB);
 
-    printf("Press any key to copy memory back\n");
-    getchar();
-    memcpy(c, b, GB);
-
     printf("Press any key to finish\n");
     getchar();
 }

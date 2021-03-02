@@ -15,6 +15,7 @@ int main() {
     getchar();
 
     void* addr = sbrk(1024 * 1024 * 1024);
+    printf("Address: %p\n", addr);
     
     printf("Press any key to touch 1GB\n");
     getchar();

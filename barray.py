@@ -33,7 +33,7 @@ if os.fork():
     parent_conn.send('x')
 
 else:
-    setproctitle.setproctitle('FORK good')
+    setproctitle.setproctitle('FORK barray')
 
     child_conn.recv()
     for _ in d:
