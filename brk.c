@@ -24,6 +24,13 @@ int main() {
         memcpy(s, addr + i, 1024);
     }
 
+    printf("Press any key to modify 1GB\n");
+    getchar();
+
+    for (int i=0; i < GB - 1024; i += 1024) {
+        memcpy(addr + i, "foo", 1024);
+    }
+
     printf("Press any key to touch beyond program break\n");
     getchar();
 
