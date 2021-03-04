@@ -14,7 +14,7 @@ int main() {
     printf("Press any key to allocate 1GB\n");
     getchar();
 
-    void* addr = sbrk(1024 * 1024 * 1024);
+    void* addr = sbrk(GB);
     printf("Address: %p\n", addr);
     
     printf("Press any key to touch 1GB\n");
